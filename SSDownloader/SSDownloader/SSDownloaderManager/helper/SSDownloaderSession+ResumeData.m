@@ -7,6 +7,7 @@
 //
 
 #import "SSDownloaderSession+ResumeData.h"
+#import "SSDownloaderMacro.h"
 
 static NSString * const kNSURLSessionResumeCurrentRequest = @"NSURLSessionResumeCurrentRequest";
 static NSString * const kNSURLSessionResumeOriginalRequest = @"NSURLSessionResumeOriginalRequest";

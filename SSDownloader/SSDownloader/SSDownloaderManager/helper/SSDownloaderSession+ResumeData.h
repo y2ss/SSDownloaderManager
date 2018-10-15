@@ -13,7 +13,7 @@
  https://stackoverflow.com/questions/39346231/resume-nsurlsession-on-ios10/39347461#39347461
  iOS10用backgroundSession进行下载时，请求暂停后再继续下载会出错
  iosBug 原因是resumeData中归档出来的数据currentRequest和originalRequest使用的是@"NSKeyedArchiveRootObjectKey"而不是NSKeyedArchiveRootObjectKey
- fix in ios11.2
+ fixed in ios11.2
  */
 
 @interface SSDownloaderSession (ResumeData)

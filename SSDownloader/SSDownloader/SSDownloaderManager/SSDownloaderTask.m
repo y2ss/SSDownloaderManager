@@ -9,39 +9,46 @@
 #import "SSDownloaderTask.h"
 #import <objc/runtime.h>
 #import "SSDownloaderSession.h"
+#import "SSDownloaderFileManager.h"
 
-NSString * const kDownloadStatusChangedNoti = @"kDownloadStatusChangedNoti";
-
-@interface SSDownloaderTask()
-{
+@interface SSDownloaderTask() {
     NSString *_saveName;
     NSUInteger _preDownloadedSize;
 }
 
 @property (nonatomic, strong) NSTimer *timer;
+
 @end
 
 @implementation SSDownloaderTask
 
 - (instancetype)init {
     if (self = [super init]) {
-        
+
     }
     return self;
 }
 
 - (instancetype)initWithUrl:(NSString *)url fileId:(NSString *)fileId delegate:(id<SSDownloaderTaskDelegate>)delegate {
-    
+    return [self initWithUrl:url fileId:fileId fileName:@"" delegate:delegate];
+}
+
+- (instancetype)initWithUrl:(NSString *)url fileId:(NSString *)fileId fileName:(NSString *)fileName delegate:(id<SSDownloaderTaskDelegate>)delegate {
     if(self = [super init]){
         _downloadURL = url;
         _fileId = fileId;
         _delegate = delegate;
+        _fileName = fileName;
     }
     return self;
 }
 
 + (instancetype)taskWithUrl:(NSString *)url fileId:(NSString *)fileId delegate:(id<SSDownloaderTaskDelegate>)delegate {
-    return [[SSDownloaderTask alloc] initWithUrl:url fileId:fileId delegate:delegate];
+    return [self taskWithUrl:url fileId:fileId fileName:@"" delegate:delegate];
+}
+
++ (instancetype)taskWithUrl:(NSString *)url fileId:(NSString *)fileId fileName:(NSString *)fileName delegate:(id<SSDownloaderTaskDelegate>)delegate {
+    return [[SSDownloaderTask alloc] initWithUrl:url fileId:fileId fileName:fileName delegate:delegate];
 }
 
 #pragma mark - public
@@ -131,20 +138,9 @@ NSString * const kDownloadStatusChangedNoti = @"kDownloadStatusChangedNoti";
 
 //获取保持文件路径
 + (NSString *)savePathWithSaveName:(NSString *)saveName {
-    NSString *saveDir = [self saveDir];
-    saveDir = [saveDir stringByAppendingPathComponent:saveName];
-    return saveDir;
+    return [SSDownloaderFileManager savePathWithSaveName:saveName];
 }
 
-//获取保存文件夹路径
-+ (NSString *)saveDir {
-    NSString *saveDir = [SSDownloaderSession defaultSavePath];
-    saveDir = [saveDir stringByAppendingPathComponent:@"video"];
-    if (![[NSFileManager defaultManager] fileExistsAtPath:saveDir]) {
-        [[NSFileManager defaultManager] createDirectoryAtPath:saveDir withIntermediateDirectories:true attributes:nil error:nil];
-    }
-    return saveDir;
-}
 
 //获取url地址
 + (NSString *)getURLFromTask:(NSURLSessionTask *)task {
@@ -177,8 +173,7 @@ NSString * const kDownloadStatusChangedNoti = @"kDownloadStatusChangedNoti";
     }
 }
 
-- (instancetype)initWithCoder:(NSCoder *)coder
-{
+- (instancetype)initWithCoder:(NSCoder *)coder {
     if (self = [super init]) {
         unsigned int count = 0;
         Ivar *ivars = class_copyIvarList([self class], &count);
@@ -194,8 +189,7 @@ NSString * const kDownloadStatusChangedNoti = @"kDownloadStatusChangedNoti";
     return self;
 }
 
-- (void)encodeWithCoder:(NSCoder *)coder
-{
+- (void)encodeWithCoder:(NSCoder *)coder {
     unsigned int count = 0;
     Ivar *ivars = class_copyIvarList([self class], &count);
     for (NSInteger i=0; i<count; i++) {
@@ -221,6 +215,10 @@ NSString * const kDownloadStatusChangedNoti = @"kDownloadStatusChangedNoti";
 
 -(void)dealloc {
     [self stopTimer];
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"\nurl=%@,fileId=%@,fileName=%@,savePath=%@,fileSzie=%zi,downloadSize=%zi\n", self.downloadURL, self.fileId, self.fileName,self.savePath,self.fileSize,self.downloadedSize];
 }
 
 @end

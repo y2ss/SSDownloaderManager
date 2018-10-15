@@ -10,8 +10,8 @@
 #import "SSDownloaderTask.h"
 @class SSDownloaderCoral;
 
-extern NSString * const kDownloadTaskFinishedNoti;
-extern NSString * const kDownloadNeedSaveDataNoti;
+UIKIT_EXTERN NSString * const kDownloadTaskFinishedNoti;
+UIKIT_EXTERN NSString * const kDownloadNeedSaveDataNoti;
 
 @protocol SSDownloaderCoralDelegate <NSObject>
 

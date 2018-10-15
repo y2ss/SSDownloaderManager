@@ -12,6 +12,7 @@
 #import "SSDownloaderTask.h"
 #import "SSDownloaderSession.h"
 #import "SSDownloadUtils.h"
+#import "SSDownloaderManager.h"
 
 
 #endif /* SSDownloader_h */

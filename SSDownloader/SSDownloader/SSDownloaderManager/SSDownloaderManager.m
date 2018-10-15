@@ -7,6 +7,11 @@
 //
 
 #import "SSDownloaderManager.h"
+#import "SSDownloaderManager+Push.h"
+#import "SSDownloaderFileManager.h"
+#import "SSDownloaderMacro.h"
+
+#define SSDownloaderMgr [SSDownloaderManager manager]
 
 @interface SSDownloaderManager () {
     dispatch_semaphore_t _lock;
@@ -32,6 +37,7 @@ static id _instance;
 
 - (instancetype)init {
     if (self = [super init]) {
+        _pushWhenDownloadSuccessed = NO;
         _lock = dispatch_semaphore_create(1);
         [self setupDownloadData];
         [self registerNotification];
@@ -49,27 +55,22 @@ static id _instance;
 - (void)saveDownloadItems {
     dispatch_async(self.dataQueue, ^{
         Lock();
-        [NSKeyedArchiver archiveRootObject:self.coralDicts toFile:[self downloadItemSavePath]];
+        [NSKeyedArchiver archiveRootObject:self.coralDicts toFile:[SSDownloaderFileManager downloadCoralSavePath]];
         Unlock();
     });
 }
 
 - (void)getDownloadItems {
-    NSMutableDictionary *dicts = [NSKeyedUnarchiver unarchiveObjectWithFile:[self downloadItemSavePath]];;
+    NSMutableDictionary *dicts = [NSKeyedUnarchiver unarchiveObjectWithFile:[SSDownloaderFileManager downloadCoralSavePath]];;
     self.coralDicts = dicts;
-}
-
-- (NSString *)downloadItemSavePath {
-    NSString *saveDir = [SSDownloaderSession defaultSavePath];
-    return [saveDir stringByAppendingFormat:@"/video/_saveCorals.data"];
 }
 
 - (void)registerNotification {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(saveDownloadItems) name:kDownloadStatusChangedNoti object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(downloadTaskFinishedNoti:) name:kDownloadTaskFinishedNoti object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(saveDownloadItems) name:kDownloadNeedSaveDataNoti object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(downloadTaskSuccessed:) name:kDownloadTaskDidFinished object:nil];
 }
-
 
 #pragma mark - SSDownloaderManager Action
 + (void)setMaxTaskCount:(NSInteger)count {
@@ -138,7 +139,7 @@ static id _instance;
 }
 
 #pragma mark - assgin
-- (void)setMaxTaskCount:(NSInteger)count{
+- (void)setMaxTaskCount:(NSInteger)count {
     [SSDownloaderSession shared].maxTaskCount = (int)count;
 }
 
@@ -160,22 +161,24 @@ static id _instance;
 }
 
 #pragma mark - private
-- (void)downloadUserChanged{
+- (void)downloadUserChanged {
     [self setupDownloadData];
 }
 
 - (SSDownloaderTask *)startDownloadWithItem:(SSDownloaderCoral *)item {
-    if(!item) return nil;
+    if (!item) { return nil; }
     SSDownloaderCoral *oldItem = [self itemWithIdentifier:item.taskId];
-    if (oldItem.downloadStatus == SSDownloaderStateSuccessed) return nil;
+    if (oldItem.downloadStatus == SSDownloaderStateSuccessed) { return nil; }
     [self.coralDicts setValue:item forKey:item.taskId];
-    
-    SSDownloaderTask *task = [[SSDownloaderSession shared] downloadWithURL:item.downloadUrl fileID:item.fileId delegate:item];
+    SSDownloaderTask *task = [[SSDownloaderSession shared] downloadWithURL:item.downloadUrl
+                                                                    fileID:item.fileId
+                                                                  fileName:item.fileName
+                                                                  delegate:item];
     return task;
 }
 
 - (void)startDownloadWithUrl:(NSString *)downloadURLString fileName:(NSString *)fileName imageUrl:(NSString *)imagUrl {
-    [self startDownloadWithUrl:downloadURLString fileName:fileName imageUrl:imagUrl fileId:downloadURLString];
+    [self startDownloadWithUrl:downloadURLString fileName:fileName imageUrl:imagUrl fileId:nil];
 }
 
 //下载文件时候的保存名称，如果没有fileid那么必须 savename = nil
@@ -189,15 +192,16 @@ static id _instance;
     if (downloadURLString.length == 0 && fileId.length == 0) { return; }
     NSString *taskId = [SSDownloaderTask taskIDForUrl:downloadURLString fileID:fileId];
     SSDownloaderCoral *item = [self.coralDicts valueForKey:taskId];
-    if (item == nil) {
+    if (!item) {
         item = [[SSDownloaderCoral alloc] initWithUrl:downloadURLString fileId:fileId];
     }
     item.fileName = fileName;
     item.thumbImageUrl = imagUrl;
+    //这里设置了delegate
     [self startDownloadWithItem:item];
 }
 
-- (void)resumeDownloadWithItem:(SSDownloaderCoral *)item{
+- (void)resumeDownloadWithItem:(SSDownloaderCoral *)item {
     SSDownloaderTask *task = [[SSDownloaderSession shared] taskForTaskId:item.taskId];
     task.delegate = item;
     [[SSDownloaderSession shared] resumeDownloadWithTaskId:item.taskId];
@@ -210,7 +214,7 @@ static id _instance;
 }
 
 - (void)stopDownloadWithItem:(SSDownloaderCoral *)item {
-    if (item == nil )  { return; }
+    if (!item)  { return; }
     [[SSDownloaderSession shared] stopDownloadWithTaskId: item.taskId];
     [self.coralDicts removeObjectForKey:item.taskId];
     [self saveDownloadItems];
@@ -226,7 +230,7 @@ static id _instance;
     }];
 }
 
-- (void)resumeAllDownloadTask{
+- (void)resumeAllDownloadTask {
     [self.coralDicts enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         SSDownloaderCoral *item = obj;
         if (item.downloadStatus == SSDownloaderStatePaused || item.downloadStatus == SSDownloaderStateFailured) {
@@ -237,14 +241,12 @@ static id _instance;
 
 -(NSArray *)downloadList {
     NSMutableArray *arrM = [NSMutableArray array];
-    
     [self.coralDicts enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         SSDownloaderCoral *item = obj;
         if(item.downloadStatus != SSDownloaderStateSuccessed){
             [arrM addObject:item];
         }
     }];
-    
     return arrM;
 }
 
@@ -262,7 +264,7 @@ static id _instance;
 /**id 可以是downloadUrl，也可以是fileId，首先从fileId开始找，然后downloadUrl*/
 - (SSDownloaderCoral *)itemWithIdentifier:(NSString *)identifier {
     __block SSDownloaderCoral *item = [self.coralDicts valueForKey:identifier];
-    if (item) return item;
+    if (item) { return item; }
     [self.coralDicts enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         SSDownloaderCoral *dItem = obj;
         if ([dItem.fileId isEqualToString:identifier]) {
@@ -271,9 +273,7 @@ static id _instance;
         }
     }];
     
-    if(item) {
-        return item;
-    }
+    if (item) { return item; }
     [self.coralDicts enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         SSDownloaderCoral *dItem = obj;
         if ([dItem.downloadUrl isEqualToString:identifier]) {
@@ -295,15 +295,20 @@ static id _instance;
 
 - (SSDownloaderState)downloasStatusWithId:(NSString *)downloadId {
     SSDownloaderCoral *item = [self itemWithIdentifier:downloadId];
-    if (!item) {
-        return -1;
-    }
+    if (!item) { return -1; }
     return item.downloadStatus;
 }
 
 #pragma mark - notificaton
 - (void)downloadTaskFinishedNoti:(NSNotification *)noti{
     [self saveDownloadItems];
+}
+
+- (void)downloadTaskSuccessed:(NSNotification *)noti {
+    if (_pushWhenDownloadSuccessed) {
+        SSDownloaderTask *task = noti.object[@"task"];
+        [self pushNotificationWithCourseName:task.fileName];
+    }
 }
 
 -(void)dealloc {
@@ -313,9 +318,10 @@ static id _instance;
 #pragma mark - queue
 - (dispatch_queue_t)dataQueue {
     if (!_dataQueue) {
-        _dataQueue = dispatch_queue_create("SSDownloaderManager_Data_Queue", DISPATCH_QUEUE_CONCURRENT);
+        _dataQueue = dispatch_queue_create("com.SSDownloaderManager.data.queue", DISPATCH_QUEUE_CONCURRENT);
     }
     return _dataQueue;
 }
+
 
 @end

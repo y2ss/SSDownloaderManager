@@ -17,7 +17,6 @@ NSString * const kDownloadNeedSaveDataNoti = @"kDownloadNeedSaveDataNoti";
 
 #pragma mark - init
 -(instancetype)initWithUrl:(NSString *)url fileId:(NSString *)fileId {
-    
     if (self = [super init]) {
         _downloadUrl = url;
         _fileId = fileId;
@@ -37,7 +36,6 @@ NSString * const kDownloadNeedSaveDataNoti = @"kDownloadNeedSaveDataNoti";
 }
 
 - (void)downloadStatusChanged:(SSDownloaderState)status downloadTask:(SSDownloaderTask *)task {
-    
     if ([self.delegate respondsToSelector:@selector(downloadItemStatusChanged:)]) {
         [self.delegate downloadItemStatusChanged:self];
     }
@@ -89,8 +87,7 @@ NSString * const kDownloadNeedSaveDataNoti = @"kDownloadNeedSaveDataNoti";
 }
 
 #pragma mark - private
-- (instancetype)initWithCoder:(NSCoder *)coder
-{
+- (instancetype)initWithCoder:(NSCoder *)coder {
     if (self = [super init]) {
         [self decoderWithCoder:coder class:[self class]];
         if (![NSStringFromClass(self.superclass) isEqualToString:NSStringFromClass([NSObject class])]) {
@@ -113,8 +110,7 @@ NSString * const kDownloadNeedSaveDataNoti = @"kDownloadNeedSaveDataNoti";
     free(ivars);
 }
 
-- (void)encodeWithCoder:(NSCoder *)coder
-{
+- (void)encodeWithCoder:(NSCoder *)coder {
     [self encodeWithCoder:coder class:[self class]];
     if (![NSStringFromClass(self.superclass) isEqualToString:NSStringFromClass([NSObject class])]) {
         [self encodeWithCoder:coder class:self.superclass];

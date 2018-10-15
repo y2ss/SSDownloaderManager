@@ -9,7 +9,29 @@
 #import "SSDownloaderTask.h"
 #import "SSDownloadUtils.h"
 
-extern NSString * const kDownloadAllTaskFinishedNoti;
+//all of this is not certain that the thread is main one
+/*
+ 某个任务下载完成
+ object: (SSDownloaderTask *)task
+ */
+UIKIT_EXTERN NSString * const kDownloadTaskDidFinished;
+/*
+ 所有任务下载完成
+ */
+UIKIT_EXTERN NSString * const kDownloadAllTaskFinishedNoti;
+/*
+ 下载任务状态变化
+ object: (SSDownloaderTask *)task
+ */
+UIKIT_EXTERN NSString * const kDownloadStatusChangedNoti;
+
+/*
+ 下载进度改变
+ object: (SSDownloaderTask *)task
+         (NSInteger)downloadSize
+         (float)fileSize
+*/
+UIKIT_EXTERN NSString * const kDownloadTaskPorgressChanged;
 
 @class SSDownloaderSession;
 
@@ -22,9 +44,7 @@ extern NSString * const kDownloadAllTaskFinishedNoti;
 @interface SSDownloaderSession : NSObject
 
 + (instancetype)shared;
-/**
- 设置同时下载任务数,最多支持3个。
- */
+/**设置同时下载任务数,最多支持3个。*/
 @property (nonatomic, assign) int maxTaskCount;
 
 @property (nonatomic, weak) id<SSDownloaderSessionDelegate>delegate;
@@ -35,7 +55,10 @@ extern NSString * const kDownloadAllTaskFinishedNoti;
  开始下载
  @param fileID 文件id。可以为空。通过改变id可以使文件重复下载
  */
-- (SSDownloaderTask *)downloadWithURL:(NSString *)url fileID:(NSString *)fileID delegate:(id<SSDownloaderTaskDelegate>)delegate;
+- (SSDownloaderTask *)downloadWithURL:(NSString *)url
+                               fileID:(NSString *)fileID
+                             fileName:(NSString *)fileName
+                             delegate:(id<SSDownloaderTaskDelegate>)delegate;
 
 #pragma Session Action
 /**暂停一个后台下载任务 */
@@ -79,8 +102,5 @@ extern NSString * const kDownloadAllTaskFinishedNoti;
 
 /**保存下载数据*/
 - (void)saveDownloadStatus;
-
-/**获取下载数据存储根目录*/
-+ (NSString *)defaultSavePath;
 
 @end

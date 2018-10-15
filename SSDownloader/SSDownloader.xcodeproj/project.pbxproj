@@ -7,21 +7,44 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		29443B5221741B1D008F707E /* SSDownloaderManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 29443B3E21741B1D008F707E /* SSDownloaderManager.m */; };
+		29443B5321741B1D008F707E /* SSDownloaderLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 29443B4021741B1D008F707E /* SSDownloaderLog.m */; };
+		29443B5421741B1D008F707E /* SSDownloaderCoral.m in Sources */ = {isa = PBXBuildFile; fileRef = 29443B4521741B1D008F707E /* SSDownloaderCoral.m */; };
+		29443B5521741B1D008F707E /* SSDownloaderSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 29443B4621741B1D008F707E /* SSDownloaderSession.m */; };
+		29443B5621741B1D008F707E /* SSDownloaderSession+ResumeData.m in Sources */ = {isa = PBXBuildFile; fileRef = 29443B4921741B1D008F707E /* SSDownloaderSession+ResumeData.m */; };
+		29443B5721741B1D008F707E /* SSDownloaderManager+Push.m in Sources */ = {isa = PBXBuildFile; fileRef = 29443B4A21741B1D008F707E /* SSDownloaderManager+Push.m */; };
+		29443B5821741B1D008F707E /* SSDownloaderFileManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 29443B4D21741B1D008F707E /* SSDownloaderFileManager.m */; };
+		29443B5921741B1D008F707E /* SSDownloadUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 29443B4E21741B1D008F707E /* SSDownloadUtils.m */; };
+		29443B5A21741B1D008F707E /* SSDownloaderTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 29443B5121741B1D008F707E /* SSDownloaderTask.m */; };
 		69BCC037210F3BEB0048C440 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 69BCC036210F3BEB0048C440 /* AppDelegate.m */; };
 		69BCC03A210F3BEB0048C440 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 69BCC039210F3BEB0048C440 /* ViewController.m */; };
 		69BCC03D210F3BEB0048C440 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 69BCC03B210F3BEB0048C440 /* Main.storyboard */; };
 		69BCC03F210F3BEB0048C440 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 69BCC03E210F3BEB0048C440 /* Assets.xcassets */; };
 		69BCC042210F3BEB0048C440 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 69BCC040210F3BEB0048C440 /* LaunchScreen.storyboard */; };
 		69BCC045210F3BEB0048C440 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 69BCC044210F3BEB0048C440 /* main.m */; };
-		69BCC06D210F3C870048C440 /* SSDownloaderCoral.m in Sources */ = {isa = PBXBuildFile; fileRef = 69BCC062210F3C870048C440 /* SSDownloaderCoral.m */; };
-		69BCC06E210F3C870048C440 /* SSDownloaderManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 69BCC064210F3C870048C440 /* SSDownloaderManager.m */; };
-		69BCC06F210F3C870048C440 /* SSDownloaderSession+ResumeData.m in Sources */ = {isa = PBXBuildFile; fileRef = 69BCC066210F3C870048C440 /* SSDownloaderSession+ResumeData.m */; };
-		69BCC070210F3C870048C440 /* SSDownloaderSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 69BCC068210F3C870048C440 /* SSDownloaderSession.m */; };
-		69BCC071210F3C870048C440 /* SSDownloaderTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 69BCC06A210F3C870048C440 /* SSDownloaderTask.m */; };
-		69BCC072210F3C870048C440 /* SSDownloadUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 69BCC06C210F3C870048C440 /* SSDownloadUtils.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		29443B3D21741B1D008F707E /* SSDownloaderCoral.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloaderCoral.h; sourceTree = "<group>"; };
+		29443B3E21741B1D008F707E /* SSDownloaderManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSDownloaderManager.m; sourceTree = "<group>"; };
+		29443B4021741B1D008F707E /* SSDownloaderLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSDownloaderLog.m; sourceTree = "<group>"; };
+		29443B4121741B1D008F707E /* SSDownloaderLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloaderLog.h; sourceTree = "<group>"; };
+		29443B4221741B1D008F707E /* SSDownloaderSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloaderSession.h; sourceTree = "<group>"; };
+		29443B4321741B1D008F707E /* SSDownloaderTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloaderTask.h; sourceTree = "<group>"; };
+		29443B4421741B1D008F707E /* SSDownloaderManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloaderManager.h; sourceTree = "<group>"; };
+		29443B4521741B1D008F707E /* SSDownloaderCoral.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSDownloaderCoral.m; sourceTree = "<group>"; };
+		29443B4621741B1D008F707E /* SSDownloaderSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSDownloaderSession.m; sourceTree = "<group>"; };
+		29443B4821741B1D008F707E /* SSDownloaderFileManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloaderFileManager.h; sourceTree = "<group>"; };
+		29443B4921741B1D008F707E /* SSDownloaderSession+ResumeData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSDownloaderSession+ResumeData.m"; sourceTree = "<group>"; };
+		29443B4A21741B1D008F707E /* SSDownloaderManager+Push.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSDownloaderManager+Push.m"; sourceTree = "<group>"; };
+		29443B4B21741B1D008F707E /* SSDownloadUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloadUtils.h; sourceTree = "<group>"; };
+		29443B4C21741B1D008F707E /* SSDownloaderSession+ResumeData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSDownloaderSession+ResumeData.h"; sourceTree = "<group>"; };
+		29443B4D21741B1D008F707E /* SSDownloaderFileManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSDownloaderFileManager.m; sourceTree = "<group>"; };
+		29443B4E21741B1D008F707E /* SSDownloadUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSDownloadUtils.m; sourceTree = "<group>"; };
+		29443B4F21741B1D008F707E /* SSDownloaderManager+Push.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSDownloaderManager+Push.h"; sourceTree = "<group>"; };
+		29443B5021741B1D008F707E /* SSDownloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloader.h; sourceTree = "<group>"; };
+		29443B5121741B1D008F707E /* SSDownloaderTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSDownloaderTask.m; sourceTree = "<group>"; };
+		29443B5B21741DBF008F707E /* SSDownloaderMacro.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SSDownloaderMacro.h; sourceTree = "<group>"; };
 		69BCC032210F3BEB0048C440 /* SSDownloader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SSDownloader.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		69BCC035210F3BEB0048C440 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		69BCC036210F3BEB0048C440 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -32,19 +55,6 @@
 		69BCC041210F3BEB0048C440 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		69BCC043210F3BEB0048C440 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		69BCC044210F3BEB0048C440 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		69BCC060210F3C870048C440 /* SSDownloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloader.h; sourceTree = "<group>"; };
-		69BCC061210F3C870048C440 /* SSDownloaderCoral.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloaderCoral.h; sourceTree = "<group>"; };
-		69BCC062210F3C870048C440 /* SSDownloaderCoral.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSDownloaderCoral.m; sourceTree = "<group>"; };
-		69BCC063210F3C870048C440 /* SSDownloaderManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloaderManager.h; sourceTree = "<group>"; };
-		69BCC064210F3C870048C440 /* SSDownloaderManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSDownloaderManager.m; sourceTree = "<group>"; };
-		69BCC065210F3C870048C440 /* SSDownloaderSession+ResumeData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSDownloaderSession+ResumeData.h"; sourceTree = "<group>"; };
-		69BCC066210F3C870048C440 /* SSDownloaderSession+ResumeData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSDownloaderSession+ResumeData.m"; sourceTree = "<group>"; };
-		69BCC067210F3C870048C440 /* SSDownloaderSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloaderSession.h; sourceTree = "<group>"; };
-		69BCC068210F3C870048C440 /* SSDownloaderSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSDownloaderSession.m; sourceTree = "<group>"; };
-		69BCC069210F3C870048C440 /* SSDownloaderTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloaderTask.h; sourceTree = "<group>"; };
-		69BCC06A210F3C870048C440 /* SSDownloaderTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSDownloaderTask.m; sourceTree = "<group>"; };
-		69BCC06B210F3C870048C440 /* SSDownloadUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSDownloadUtils.h; sourceTree = "<group>"; };
-		69BCC06C210F3C870048C440 /* SSDownloadUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSDownloadUtils.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +68,49 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		29443B3C21741B1D008F707E /* SSDownloaderManager */ = {
+			isa = PBXGroup;
+			children = (
+				29443B5021741B1D008F707E /* SSDownloader.h */,
+				29443B3D21741B1D008F707E /* SSDownloaderCoral.h */,
+				29443B4521741B1D008F707E /* SSDownloaderCoral.m */,
+				29443B4421741B1D008F707E /* SSDownloaderManager.h */,
+				29443B3E21741B1D008F707E /* SSDownloaderManager.m */,
+				29443B4221741B1D008F707E /* SSDownloaderSession.h */,
+				29443B4621741B1D008F707E /* SSDownloaderSession.m */,
+				29443B4321741B1D008F707E /* SSDownloaderTask.h */,
+				29443B5121741B1D008F707E /* SSDownloaderTask.m */,
+				29443B3F21741B1D008F707E /* logger */,
+				29443B4721741B1D008F707E /* helper */,
+			);
+			path = SSDownloaderManager;
+			sourceTree = "<group>";
+		};
+		29443B3F21741B1D008F707E /* logger */ = {
+			isa = PBXGroup;
+			children = (
+				29443B4121741B1D008F707E /* SSDownloaderLog.h */,
+				29443B4021741B1D008F707E /* SSDownloaderLog.m */,
+			);
+			path = logger;
+			sourceTree = "<group>";
+		};
+		29443B4721741B1D008F707E /* helper */ = {
+			isa = PBXGroup;
+			children = (
+				29443B4821741B1D008F707E /* SSDownloaderFileManager.h */,
+				29443B4D21741B1D008F707E /* SSDownloaderFileManager.m */,
+				29443B4C21741B1D008F707E /* SSDownloaderSession+ResumeData.h */,
+				29443B4921741B1D008F707E /* SSDownloaderSession+ResumeData.m */,
+				29443B4F21741B1D008F707E /* SSDownloaderManager+Push.h */,
+				29443B4A21741B1D008F707E /* SSDownloaderManager+Push.m */,
+				29443B4B21741B1D008F707E /* SSDownloadUtils.h */,
+				29443B4E21741B1D008F707E /* SSDownloadUtils.m */,
+				29443B5B21741DBF008F707E /* SSDownloaderMacro.h */,
+			);
+			path = helper;
+			sourceTree = "<group>";
+		};
 		69BCC029210F3BEB0048C440 = {
 			isa = PBXGroup;
 			children = (
@@ -77,7 +130,7 @@
 		69BCC034210F3BEB0048C440 /* SSDownloader */ = {
 			isa = PBXGroup;
 			children = (
-				69BCC05F210F3C870048C440 /* downloader */,
+				29443B3C21741B1D008F707E /* SSDownloaderManager */,
 				69BCC035210F3BEB0048C440 /* AppDelegate.h */,
 				69BCC036210F3BEB0048C440 /* AppDelegate.m */,
 				69BCC038210F3BEB0048C440 /* ViewController.h */,
@@ -89,26 +142,6 @@
 				69BCC044210F3BEB0048C440 /* main.m */,
 			);
 			path = SSDownloader;
-			sourceTree = "<group>";
-		};
-		69BCC05F210F3C870048C440 /* downloader */ = {
-			isa = PBXGroup;
-			children = (
-				69BCC060210F3C870048C440 /* SSDownloader.h */,
-				69BCC061210F3C870048C440 /* SSDownloaderCoral.h */,
-				69BCC062210F3C870048C440 /* SSDownloaderCoral.m */,
-				69BCC063210F3C870048C440 /* SSDownloaderManager.h */,
-				69BCC064210F3C870048C440 /* SSDownloaderManager.m */,
-				69BCC065210F3C870048C440 /* SSDownloaderSession+ResumeData.h */,
-				69BCC066210F3C870048C440 /* SSDownloaderSession+ResumeData.m */,
-				69BCC067210F3C870048C440 /* SSDownloaderSession.h */,
-				69BCC068210F3C870048C440 /* SSDownloaderSession.m */,
-				69BCC069210F3C870048C440 /* SSDownloaderTask.h */,
-				69BCC06A210F3C870048C440 /* SSDownloaderTask.m */,
-				69BCC06B210F3C870048C440 /* SSDownloadUtils.h */,
-				69BCC06C210F3C870048C440 /* SSDownloadUtils.m */,
-			);
-			path = downloader;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -182,15 +215,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69BCC06D210F3C870048C440 /* SSDownloaderCoral.m in Sources */,
+				29443B5821741B1D008F707E /* SSDownloaderFileManager.m in Sources */,
+				29443B5A21741B1D008F707E /* SSDownloaderTask.m in Sources */,
+				29443B5421741B1D008F707E /* SSDownloaderCoral.m in Sources */,
+				29443B5221741B1D008F707E /* SSDownloaderManager.m in Sources */,
+				29443B5521741B1D008F707E /* SSDownloaderSession.m in Sources */,
+				29443B5721741B1D008F707E /* SSDownloaderManager+Push.m in Sources */,
 				69BCC03A210F3BEB0048C440 /* ViewController.m in Sources */,
-				69BCC070210F3C870048C440 /* SSDownloaderSession.m in Sources */,
-				69BCC06F210F3C870048C440 /* SSDownloaderSession+ResumeData.m in Sources */,
+				29443B5621741B1D008F707E /* SSDownloaderSession+ResumeData.m in Sources */,
+				29443B5321741B1D008F707E /* SSDownloaderLog.m in Sources */,
 				69BCC045210F3BEB0048C440 /* main.m in Sources */,
-				69BCC071210F3C870048C440 /* SSDownloaderTask.m in Sources */,
 				69BCC037210F3BEB0048C440 /* AppDelegate.m in Sources */,
-				69BCC072210F3C870048C440 /* SSDownloadUtils.m in Sources */,
-				69BCC06E210F3C870048C440 /* SSDownloaderManager.m in Sources */,
+				29443B5921741B1D008F707E /* SSDownloadUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -325,7 +361,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = SSDownloader/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.hemeng.SSDownloader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -338,7 +376,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = SSDownloader/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.hemeng.SSDownloader;
 				PRODUCT_NAME = "$(TARGET_NAME)";

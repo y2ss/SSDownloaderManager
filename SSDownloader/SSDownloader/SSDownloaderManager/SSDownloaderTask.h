@@ -18,8 +18,6 @@ typedef NS_ENUM(NSUInteger, SSDownloaderState) {
     SSDownloaderStatePaused
 };
 
-/**某一任务下载的状态发生变化的通知*/
-extern NSString * const kDownloadStatusChangedNoti;
 
 @protocol SSDownloaderTaskDelegate <NSObject>
 @optional
@@ -53,6 +51,7 @@ extern NSString * const kDownloadStatusChangedNoti;
 @property (nonatomic, copy, readonly) NSString *downloadURL;
 /**文件标识，可以为空。要想同- downloadURL文件重复下载，可以让fileId不同*/
 @property (nonatomic, copy, readonly) NSString *fileId;
+@property (nonatomic, copy, readonly) NSString *fileName;
 @property (nonatomic, strong) NSData *resumeData;
 @property (nonatomic, assign) SSDownloaderState downloadStatus;
 /**文件本地存储名称*/
@@ -76,7 +75,11 @@ extern NSString * const kDownloadStatusChangedNoti;
  */
 - (instancetype)initWithUrl:(NSString *)url fileId:(NSString *)fileId delegate:(id<SSDownloaderTaskDelegate>)delegate;
 
+- (instancetype)initWithUrl:(NSString *)url fileId:(NSString *)fileId fileName:(NSString *)fileName delegate:(id<SSDownloaderTaskDelegate>)delegate;
+
 + (instancetype)taskWithUrl:(NSString *)url fileId:(NSString *)fileId delegate:(id<SSDownloaderTaskDelegate>)delegate;
+
++ (instancetype)taskWithUrl:(NSString *)url fileId:(NSString *)fileId fileName:(NSString *)fileName delegate:(id<SSDownloaderTaskDelegate>)delegate;
 
 /**保存文件大小*/
 - (void)updateFileSize;
@@ -107,6 +110,7 @@ extern NSString * const kDownloadStatusChangedNoti;
  */
 + (NSString *)taskIDForUrl:(NSString *)url fileID:(NSString *)fileId;
 
+- (void)stopTimer;
 
 @end
 

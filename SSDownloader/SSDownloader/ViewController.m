@@ -7,6 +7,7 @@
 //
 
 #import "ViewController.h"
+#import "SSDownloaderManager.h"
 
 @interface ViewController ()
 
@@ -16,6 +17,9 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    //[SSDownloaderManager setMaxTaskCount:3];
+    //[SSDownloaderManager startDownloadWithUrl:@"119.29.40.174/upload/video/video1.mp4" fileName:@"视频1" imageUrl:@""];
     // Do any additional setup after loading the view, typically from a nib.
 }
 

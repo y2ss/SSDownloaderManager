@@ -11,9 +11,10 @@
 #import "SSDownloaderSession.h"
 #import "SSDownloadUtils.h"
 
-#define SSDownloaderMgr [SSDownloaderManager manager]
-
 @interface SSDownloaderManager : NSObject
+
+/*下载完成是否开启本地推送 默认关闭*/
+@property (nonatomic) BOOL pushWhenDownloadSuccessed;
 
 + (instancetype)manager;
 
@@ -21,7 +22,6 @@
 + (void)setMaxTaskCount:(NSInteger)count;
 
 + (SSDownloaderTask *)startDownloadWithItem:(SSDownloaderCoral *)item;
-
 
 /**
  url为下载任务的唯一标识。
@@ -72,9 +72,7 @@
 /**获取下载数据所占用磁盘空间*/
 + (int64_t)usedVideoCache;
 
+//do not use
 + (void)saveDownloadStatus;
-
-
-
 
 @end

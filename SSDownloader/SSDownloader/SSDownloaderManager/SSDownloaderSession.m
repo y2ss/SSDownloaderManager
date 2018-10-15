@@ -8,6 +8,11 @@
 
 #import "SSDownloaderSession.h"
 #import "SSDownloaderSession+ResumeData.h"
+#import "SSDownloaderFileManager.h"
+#import "SSDownloaderLog.h"
+#import "SSDownloaderMacro.h"
+
+#define __FUNCINFO__ [NSString stringWithFormat:@"[%s] %s [第%d行]", __TIME__, __FUNCTION__, __LINE__]
 
 typedef void(^bgSessionRecreateHandler)(void);
 typedef void(^bgCompleteHandler)(void);
@@ -15,7 +20,10 @@ typedef void(^bgCompleteHandler)(void);
 static NSString * const kIsAllowCellar = @"kIsAllowCellar";
 static NSString * const backgroundIdentifier = @"SS_Downloader_Background";
 
+NSString * const kDownloadTaskPorgressChanged = @"kDownloadPorgressChanged";
+NSString * const kDownloadTaskDidFinished = @"kDownloadTaskDidFinished";
 NSString * const kDownloadAllTaskFinishedNoti = @"kAllDownloadTaskFinishedNoti";
+NSString * const kDownloadStatusChangedNoti = @"kDownloadStatusChangedNoti";
 
 @interface SSDownloaderSession ()<NSURLSessionDownloadDelegate> {
 
@@ -31,6 +39,8 @@ NSString * const kDownloadAllTaskFinishedNoti = @"kAllDownloadTaskFinishedNoti";
 
 @property (nonatomic, copy) bgCompleteHandler completeHanlder;
 @property (nonatomic, copy) bgSessionRecreateHandler sessionRecreateHanlder;
+
+@property (nonatomic, strong) SSDownloaderLog *logger;
 
 @end
 
@@ -48,7 +58,6 @@ static SSDownloaderSession *_instance;
 
 - (instancetype)init {
     if (self = [super init]) {
-        SSLog(@"SSDownloaderSession savePath: %@", [SSDownloaderSession archiverPath]);
         //初始化
         _session = [self getDownloadURLSession];
         _maxTaskCount = 1;
@@ -66,14 +75,15 @@ static SSDownloaderSession *_instance;
             }
         }];
         [self registerNotification];
+        _logger = [[SSDownloaderLog alloc] init];
     }
     return self;
 }
 
 - (void)setupDownloadData {
-    [SSDownloadUtils createPathIfNotExist:[SSDownloaderSession defaultSavePath]];
+    [SSDownloaderFileManager createPathIfNotExist:[SSDownloaderFileManager defaultSavePath]];
     //获取之前保存在本地的数据
-    _downloadTasks = [NSKeyedUnarchiver unarchiveObjectWithFile:[SSDownloaderSession archiverPath]];
+    _downloadTasks = [NSKeyedUnarchiver unarchiveObjectWithFile:[SSDownloaderFileManager archiverPath]];
     if(!_downloadTasks) {
         _downloadTasks = @{}.mutableCopy;
     }
@@ -88,8 +98,8 @@ static SSDownloaderSession *_instance;
 - (NSURLSession *)getDownloadURLSession {
     NSURLSessionConfiguration* sessionConfig = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:backgroundIdentifier];
     sessionConfig.allowsCellularAccess = YES;
-    sessionConfig.timeoutIntervalForRequest = 200;
-    sessionConfig.timeoutIntervalForResource = 200;
+    sessionConfig.timeoutIntervalForRequest = 1600;
+    sessionConfig.timeoutIntervalForResource = 1600;
     NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig
                                                           delegate:self
                                                      delegateQueue:[NSOperationQueue mainQueue]];
@@ -159,11 +169,12 @@ static SSDownloaderSession *_instance;
 
 #pragma mark - public
 - (SSDownloaderTask *)downloadWithURL:(NSString *)url delegate:(id<SSDownloaderTaskDelegate>)delegate {
-    return [self downloadWithURL:url fileID:nil delegate:delegate];
+    return [self downloadWithURL:url fileID:nil fileName:@"" delegate:delegate];
 }
 
 - (SSDownloaderTask *)downloadWithURL:(NSString *)url
                                fileID:(NSString *)fileID
+                             fileName:(NSString *)fileName
                              delegate:(id<SSDownloaderTaskDelegate>)delegate {
     if (!url || url.length == 0)  return nil;
     //判断是否是下载完成的任务
@@ -177,12 +188,16 @@ static SSDownloaderSession *_instance;
         //判断任务的个数，如果达到最大值则返回，回调等待
         if ([self currentTaskCount] >= self.maxTaskCount) {
             //创建任务，让其处于等待状态
-            task = [self createDownloadTaskItemWithUrl:url fileId:fileID delegate:delegate];
+            task = [self createDownloadTaskItemWithUrl:url fileId:fileID fileName:fileName delegate:delegate];
             [self downloadStatusChanged:SSDownloaderStateWaiting task:task];
+            
+            [_logger logNewTaskAndWaittingWithTask:task waitNum:[self currentTaskCount] funcInfo:__FUNCINFO__];
             return task;
         } else {
             //开始下载
-            return [self startNewTaskWithUrl:url fileId:fileID delegate:delegate];
+            SSDownloaderTask *task = [self startNewTaskWithUrl:url fileId:fileID fileName:fileName delegate:delegate];
+            [_logger logNewTaskWithTask:task funcInfo:__FUNCINFO__];
+            return task;
         }
     } else {//文件存在 下载到一半的文件
         task.delegate = delegate;
@@ -219,6 +234,7 @@ static SSDownloaderSession *_instance;
         [[NSFileManager defaultManager] removeItemAtPath:task.savePath error:nil];
     }
     [task.downloadTask cancel];
+    [task stopTimer];
     if (task.taskID.length>0) {
        [self.downloadTasks removeObjectForKey:task.taskID];
     }
@@ -226,8 +242,7 @@ static SSDownloaderSession *_instance;
     [self startNextDownloadTask];
 }
 
-- (void)pauseAllDownloadTask{
-
+- (void)pauseAllDownloadTask {
     [self.downloadTasks enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, SSDownloaderTask * _Nonnull obj, BOOL * _Nonnull stop) {
         if(obj.downloadStatus == SSDownloaderStateDownloading && obj.downloadTask.state != NSURLSessionTaskStateCompleted){
             [self pauseDownloadTask:obj];
@@ -235,17 +250,19 @@ static SSDownloaderSession *_instance;
             [self downloadStatusChanged:SSDownloaderStatePaused task:obj];
         }
     }];
-
 }
+
 - (void)removeAllCache {
-    [self pauseAllDownloadTask];
-    [self.downloadTasks enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, SSDownloaderTask *  _Nonnull obj, BOOL * _Nonnull stop) {
-        if ([[NSFileManager defaultManager] fileExistsAtPath:obj.savePath]) {
-            [[NSFileManager defaultManager] removeItemAtPath:obj.savePath error:nil];
-        }
-    }];
-    [self.downloadTasks removeAllObjects];
-    [self saveDownloadStatus];
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        [self pauseAllDownloadTask];
+        [self.downloadTasks enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, SSDownloaderTask *  _Nonnull obj, BOOL * _Nonnull stop) {
+            if ([[NSFileManager defaultManager] fileExistsAtPath:obj.savePath]) {
+                [[NSFileManager defaultManager] removeItemAtPath:obj.savePath error:nil];
+            }
+        }];
+        [self.downloadTasks removeAllObjects];
+        [self saveDownloadStatus];
+    });
 }
 
 - (SSDownloaderTask *)taskForTaskId:(NSString *)taskId {
@@ -275,19 +292,26 @@ static SSDownloaderSession *_instance;
 }
 
 //创建新的任务
-- (SSDownloaderTask *)startNewTaskWithUrl:(NSString *)downloadURLString fileId:(NSString *)fileId delegate:(id<SSDownloaderTaskDelegate>)delegate{
+- (SSDownloaderTask *)startNewTaskWithUrl:(NSString *)downloadURLString
+                                   fileId:(NSString *)fileId
+                                 fileName:(NSString *)fileName
+                                 delegate:(id<SSDownloaderTaskDelegate>)delegate {
     
     NSURLSessionDownloadTask *downloadTask = [self downloadTaskWithUrl:downloadURLString];
-    SSDownloaderTask *task = [self createDownloadTaskItemWithUrl:downloadURLString fileId:fileId delegate:delegate];
+    SSDownloaderTask *task = [self createDownloadTaskItemWithUrl:downloadURLString fileId:fileId fileName:fileName delegate:delegate];
+    SSLog(@"%@", task);
     task.downloadTask = downloadTask;
     [downloadTask resume];
     [self downloadStatusChanged:SSDownloaderStateDownloading task:task];
     return task;
 }
 
-- (SSDownloaderTask *)createDownloadTaskItemWithUrl:(NSString *)downloadURLString fileId:(NSString *)fileId delegate:(id<SSDownloaderTaskDelegate>)delegate{
+- (SSDownloaderTask *)createDownloadTaskItemWithUrl:(NSString *)downloadURLString
+                                             fileId:(NSString *)fileId
+                                           fileName:(NSString *)fileName
+                                           delegate:(id<SSDownloaderTaskDelegate>)delegate {
     
-    SSDownloaderTask *task = [SSDownloaderTask taskWithUrl:downloadURLString fileId:fileId delegate:delegate];
+    SSDownloaderTask *task = [SSDownloaderTask taskWithUrl:downloadURLString fileId:fileId fileName:fileName delegate:delegate];
     task.delegate = delegate;
     [self.downloadTasks setObject:task forKey:task.taskID];
     [self downloadStatusChanged:SSDownloaderStateWaiting task:task];
@@ -303,6 +327,7 @@ static SSDownloaderSession *_instance;
         [self downloadStatusChanged:SSDownloaderStatePaused task:task];
     }
 }
+
 //重新下载文件
 - (void)resumeDownloadTask:(SSDownloaderTask *)task {
     if (!task) { return; }
@@ -326,12 +351,14 @@ static SSDownloaderSession *_instance;
             downloadTask = [SSDownloaderSession downloadTaskWithCorrectResumeData:data urlSession:self.session];
         } @catch (NSException *exception) {
             SSLog(@"%@", exception.reason);
+            [_logger logResumeTaskFailedWithTask:task reason:exception.reason funcInfo:__FUNCINFO__];
             [self downloadStatusChanged:SSDownloaderStateFailured task:task];
             return;
         }
         task.downloadTask = downloadTask;
         [downloadTask resume];
         task.resumeData = nil;
+        [_logger logResumeTaskWithTask:task funcInfo:__FUNCINFO__];
         [self downloadStatusChanged:SSDownloaderStateDownloading task:task];
     } else {//新任务
         if (!task.downloadTask || task.downloadTask.state == NSURLSessionTaskStateCompleted || task.downloadTask.state == NSURLSessionTaskStateCanceling) {
@@ -341,6 +368,7 @@ static SSDownloaderSession *_instance;
             [downloadTask resume];
         }
         [task.downloadTask resume];
+        [_logger logNewTaskWithTask:task funcInfo:__FUNCINFO__];
         [self downloadStatusChanged:SSDownloaderStateDownloading task:task];
     }
 }
@@ -362,8 +390,11 @@ static SSDownloaderSession *_instance;
     if ([task.delegate respondsToSelector:@selector(downloadStatusChanged:downloadTask:)]) {
         [task.delegate downloadStatusChanged:status downloadTask:task];
     }
-    [[NSNotificationCenter defaultCenter] postNotificationName:kDownloadStatusChangedNoti object:nil];
-    if (status == SSDownloaderStateSuccessed) [self startNextDownloadTask];
+    NSDictionary *info = task ? @{@"task":task} : @{};
+    [[NSNotificationCenter defaultCenter] postNotificationName:kDownloadStatusChangedNoti object:info];
+    if (status == SSDownloaderStateSuccessed) {
+      [self startNextDownloadTask];
+    }
 }
 
 - (BOOL)allTaskFinised {
@@ -382,22 +413,23 @@ static SSDownloaderSession *_instance;
 - (void)saveDownloadStatus {
     dispatch_async(self.archieveQueue, ^{
         Lock();
-        [NSKeyedArchiver archiveRootObject:self.downloadTasks toFile:[SSDownloaderSession archiverPath]];
+        [NSKeyedArchiver archiveRootObject:self.downloadTasks toFile:[SSDownloaderFileManager archiverPath]];
         Unlock();
     });
+    //[_logger logDownloadStatus:__FUNCINFO__ downloadInfo:self.downloadTasks.description];
 }
 
 //判断是否下载完成
 - (BOOL)isDownloadTaskCompleted:(SSDownloaderTask *)task {
     if (!task) { return false; }
-    if(task.downloadFinished) { return true; }
+    if (task.downloadFinished) { return true; }
     NSArray *tmpPaths = [self getTmpPathsWithTask:task];
 
     __block BOOL isFinished = false;
     [tmpPaths enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         NSString *path = obj;
         int64_t fileSize = [SSDownloadUtils fileSizeWithPath:path];
-        if (fileSize>0 && fileSize == task.fileSize) {
+        if (fileSize > 0 && fileSize == task.fileSize) {
             [[NSFileManager defaultManager] moveItemAtPath:path toPath:task.savePath error:nil];
             isFinished = true;
             task.downloadStatus = SSDownloaderStateSuccessed;
@@ -423,26 +455,41 @@ static SSDownloaderSession *_instance;
         //系统正在下载的文件tmp文件存储路径和部分异常的tmp文件(回调失败)
         downloadPath = [downloadPath stringByAppendingPathComponent: [NSString stringWithFormat:@"/com.apple.nsurlsessiond/Downloads/%@/", bundleId]];
         downloadPath = [downloadPath stringByAppendingPathComponent:task.tmpName];
-        if([fileMgr fileExistsAtPath:downloadPath]){
+        if ([fileMgr fileExistsAtPath:downloadPath]) {
             [tmpPaths addObject:downloadPath];
         }
         //暂停下载后，系统从 downloadPath 目录移动到此
         NSString *tmpPath = [NSTemporaryDirectory() stringByAppendingPathComponent:task.tmpName];
-        if([fileMgr fileExistsAtPath:tmpPath]) [tmpPaths addObject:tmpPath];
+        if ([fileMgr fileExistsAtPath:tmpPath]) {
+            [tmpPaths addObject:tmpPath];
+        }
     }
-    if(tmpPaths.count == 0) { task.tmpName = nil; }
+    if (tmpPaths.count == 0) { task.tmpName = nil; }
     return tmpPaths;
 }
 
 
 - (SSDownloaderTask *)getDownloadTaskWithUrl:(NSString *)downloadUrl {
-    NSMutableDictionary *tasks = self.downloadTasks ;
+    NSMutableDictionary *tasks = self.downloadTasks;
     __block SSDownloaderTask *task = nil;
     [tasks enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         SSDownloaderTask *dTask = obj;
         if ([dTask.downloadURL isEqualToString:downloadUrl]) {
             task = dTask;
             *stop = true;
+        }
+    }];
+    return task;
+}
+
+- (SSDownloaderTask *)getDownloadTaskWithIdentifier:(NSInteger)identifier {
+    NSMutableDictionary *tasks = self.downloadTasks;
+    __block SSDownloaderTask *task = nil;
+    [tasks enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+        SSDownloaderTask *dTask = obj;
+        if (dTask.downloadTask.taskIdentifier == identifier) {
+            task = dTask;
+            *stop = YES;
         }
     }];
     return task;
@@ -502,8 +549,9 @@ static SSDownloaderSession *_instance;
 
     NSString *downloadUrl = [SSDownloaderTask getURLFromTask:downloadTask];
     SSDownloaderTask *task = [self getDownloadTaskWithUrl:downloadUrl];
-    if(!task){
+    if (!task) {
         SSLog(@"Download Finished task is null error! url: %@", downloadUrl);
+        [_logger logDownloadErrorWithTask:task error:downloadTask.error otherReason:@"task is nill" funcInfo:__FUNCINFO__];
         return;
     }
     task.tempPath = locationString;
@@ -513,13 +561,14 @@ static SSDownloaderSession *_instance;
         task.downloadTask = downloadTask;
         [task updateFileSize];
     }
-    BOOL isCompltedFile = (fileSize>0) && (fileSize == task.fileSize);
+    BOOL isCompltedFile = (fileSize > 0) && (fileSize == task.fileSize);
     //文件大小不对，回调失败
     if (!isCompltedFile) {
         [self downloadStatusChanged:SSDownloaderStateFailured task:task];
         //删除异常的缓存文件
         [[NSFileManager defaultManager] removeItemAtPath:locationString error:nil];
         SSLog(@"Download Finished Error: file size error");
+        [_logger logDownloadErrorWithTask:task error:downloadTask.error otherReason:@"file size error" funcInfo:__FUNCINFO__];
         return;
     }
     task.downloadedSize = task.fileSize;
@@ -527,7 +576,7 @@ static SSDownloaderSession *_instance;
     [[NSFileManager defaultManager] moveItemAtPath:locationString toPath:task.savePath error:&error];
     [self.downloadTasks setValue:task forKey:task.taskID];
     [self downloadStatusChanged:SSDownloaderStateSuccessed task:task];
-    
+    [_logger logDownloadSuccessWithTask:task funcInfo:__FUNCINFO__];
     //URLSessionDidFinishEventsForBackgroundURLSession 方法在后台执行一次，所以在此判断执行completedHandler
     if ([self allTaskFinised]) {
         [[NSNotificationCenter defaultCenter] postNotificationName:kDownloadAllTaskFinishedNoti object:nil];
@@ -538,7 +587,9 @@ static SSDownloaderSession *_instance;
 
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didWriteData:(int64_t)bytesWritten totalBytesWritten:(int64_t)totalBytesWritten totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
     
-    SSDownloaderTask *task = [self getDownloadTaskWithUrl:[SSDownloaderTask getURLFromTask:downloadTask]];
+    /**这里获取task时不应该用url判断 因为有可能同时下载同一个url 应该用task identifier**/
+    //SSDownloaderTask *task = [self getDownloadTaskWithUrl:[SSDownloaderTask getURLFromTask:downloadTask]];
+    SSDownloaderTask *task = [self getDownloadTaskWithIdentifier:downloadTask.taskIdentifier];
     task.downloadedSize = (NSInteger)totalBytesWritten;
     if (task.fileSize == 0)  {//task第一次接受数据的时候
         [task updateFileSize];
@@ -550,15 +601,22 @@ static SSDownloaderSession *_instance;
     if([task.delegate respondsToSelector:@selector(downloadProgress:downloadedSize:fileSize:)]){
         [task.delegate downloadProgress:task downloadedSize:task.downloadedSize fileSize:task.fileSize];
     }
-    dispatch_async(self.speedQueue, ^{
-        [task downloadedSize:task.downloadedSize fileSize:task.fileSize];
-    });
+    if (task) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kDownloadTaskPorgressChanged
+                                                            object:@{
+                                                                     @"task":task,
+                                                                     @"downloadSize":@(task.downloadedSize),
+                                                                     @"fileSize":@(task.fileSize)
+                                                                     }];
+        dispatch_async(self.speedQueue, ^{
+            [task downloadedSize:task.downloadedSize fileSize:task.fileSize];
+        });
+    }
 }
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error {
     SSDownloaderTask *yctask = [self getDownloadTaskWithUrl:[SSDownloaderTask getURLFromTask:task]];
     if (error) {
-        
         NSData *resumeData = [error.userInfo objectForKey:NSURLSessionDownloadTaskResumeData];
         if (resumeData) {
             if (DEVICE_VERSION >= 11.0f && DEVICE_VERSION < 11.2f) {
@@ -575,43 +633,34 @@ static SSDownloaderSession *_instance;
             yctask.downloadTask = nil;
             [self saveDownloadStatus];
             [self downloadStatusChanged:SSDownloaderStatePaused task:yctask];
-           
+            [_logger logPauseWithTask:yctask funcInfo:__FUNCINFO__];
         } else {
             SSLog(@"didCompleteWithError : %@",error);
+            [_logger logDownloadErrorWithTask:yctask error:error otherReason:@"" funcInfo:__FUNCINFO__];
             [self downloadStatusChanged:SSDownloaderStateFailured task:yctask];
         }
+    } else {
+        NSNotification *noti = [NSNotification notificationWithName:kDownloadTaskDidFinished object:@{@"task":yctask}];
+        [[NSNotificationCenter defaultCenter] postNotification:noti];
     }
+    [_logger logDownloadSuccessWithTask:yctask funcInfo:__FUNCINFO__];
     [self startNextDownloadTask];
 }
 
 #pragma mark queue
 - (dispatch_queue_t)archieveQueue {
     if (!_archieveQueue) {
-        _archieveQueue = dispatch_queue_create("SSDownloader_archieve_queue", DISPATCH_QUEUE_CONCURRENT);
+        _archieveQueue = dispatch_queue_create("com.SSDownloaderManager.archieve.queue", DISPATCH_QUEUE_CONCURRENT);
     }
     return _archieveQueue;
 }
 
 - (dispatch_queue_t)speedQueue {
     if (!_speedQueue) {
-        _speedQueue = dispatch_queue_create("SSDownloader_speed_queue", DISPATCH_QUEUE_CONCURRENT);
+        _speedQueue = dispatch_queue_create("com.SSDownloaderManager.speed.queue", DISPATCH_QUEUE_CONCURRENT);
     }
     return _speedQueue;
 }
 
-#pragma mark - path
-+ (NSString *)archiverPath {
-    NSString *saveDir = [self defaultSavePath];
-    saveDir = [saveDir stringByAppendingPathComponent:@"SSCoral.db"];
-    return saveDir;
-}
-
-//获取默认保存路径
-+ (NSString *)defaultSavePath {
-    NSString *saveDir = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true).firstObject;
-    saveDir = [saveDir stringByAppendingPathComponent:@"SSDownload"];
-    [SSDownloadUtils createPathIfNotExist:saveDir];
-    return saveDir;
-}
 
 @end

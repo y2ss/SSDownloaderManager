@@ -19,10 +19,9 @@
 
 + (NSString *)md5ForString:(NSString *)string;
 
-/**创建路径*/
-+ (void)createPathIfNotExist:(NSString *)path;
-
 /**获取文件大小*/
 + (int64_t)fileSizeWithPath:(NSString *)path;
+
++ (NSString *)iphoneType;
 
 @end
